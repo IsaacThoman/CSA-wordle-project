@@ -5,7 +5,22 @@ let titleImage = new Image(); titleImage.src = 'title.png';
 let localPlayer = {words:['','','','','','']};
 let keyCenters = [];
 let keyboardDisplayChars = 'qwertyuiop←asdfghjkl⏎zxcvbnm'.split('');
+let keyboardColors = {};
+let secretWord = 'shard';
+let rowChecked = -1;
+let dictionaryRaw;
+let dictionary = [];
+let rejected = false;
+fetch('dictionary.txt')
+    .then(response => response.text())
+    .then(text => dictionaryRaw = text.split('\r\n'))
+    .then(filterDictionary)
 
+function filterDictionary(){
+    for(let i = 0; i<dictionaryRaw.length; i++)
+        if(dictionaryRaw[i].length==5)
+            dictionary.push(dictionaryRaw[i]);
+}
 
 function doFrame(){
     ctx.canvas.width = window.innerWidth-15;
@@ -52,8 +67,20 @@ function drawLetterBox(textColor, bgColor, x,y,width,height,char){
 function drawLetterBoxes(x,y,player){
     for(let yChange = 0; yChange<=225; yChange+=45)
         for(let xChange = -90; xChange<=90; xChange+=45){
-            
-            drawLetterBox("#ffffff","#6aaa64",x-25+xChange,y/1.5-25+yChange,40,40,localPlayer.words[Math.floor(yChange/45)].charAt(Math.floor(xChange/45+2)));
+            let bgColor = "#a6a6a6";
+            if(rowChecked >= Math.floor(yChange/45))
+                bgColor = "#707070";
+            if(localPlayer.words[Math.floor(yChange/45)].charAt(Math.floor(xChange/45+2))==secretWord.charAt(Math.floor(xChange/45+2))  &&  rowChecked >= Math.floor(yChange/45))
+                bgColor = "#71ad6c";
+            else if(secretWord.indexOf(localPlayer.words[Math.floor(yChange/45)].charAt(Math.floor(xChange/45+2)))>-1 &&  rowChecked >= Math.floor(yChange/45))
+                bgColor = "#c0c276";
+            if(rejected && Math.floor(yChange/45) == rowChecked+1)
+                bgColor = "#c94848";
+            drawLetterBox("#ffffff",bgColor,x-25+xChange,y/1.5-25+yChange,40,40,localPlayer.words[Math.floor(yChange/45)].charAt(Math.floor(xChange/45+2)));
+            if(bgColor == "#707070")
+                bgColor = "#3f3f3f";
+            if(bgColor == "#3f3f3f" || bgColor == "#71ad6c" || bgColor == "#c0c276" )
+            keyboardColors[localPlayer.words[Math.floor(yChange/45)].charAt(Math.floor(xChange/45+2))] = bgColor;
         }
 
 }
@@ -61,19 +88,28 @@ function drawLetterBoxes(x,y,player){
 function drawKeyboard(color,x,y,w,h){
     let charOn = 0;
     for(let xChange = -165; xChange<=165; xChange+=33){
-        drawLetterBox("#ffffff","#909094",x-25+xChange,y+10,30,40,keyboardDisplayChars[charOn]);
+        let keyColor = "#909094";
+        if(keyboardColors[keyboardDisplayChars[charOn]]!=null)
+            keyColor = keyboardColors[keyboardDisplayChars[charOn]];
+        drawLetterBox("#ffffff",keyColor,x-25+xChange,y+10,30,40,keyboardDisplayChars[charOn]);
         keyCenters[charOn] = {x:(x-25+xChange)+15,y:y+10+20}
         charOn++;
     }
     y+=45;
     for(let xChange = -155; xChange<=160; xChange+=35) {
-        drawLetterBox("#ffffff", "#909094", x - 25 + xChange, y + 10, 30, 40,keyboardDisplayChars[charOn]);
+        let keyColor = "#909094";
+        if(keyboardColors[keyboardDisplayChars[charOn]]!=null)
+            keyColor = keyboardColors[keyboardDisplayChars[charOn]];
+        drawLetterBox("#ffffff", keyColor, x - 25 + xChange, y + 10, 30, 40,keyboardDisplayChars[charOn]);
         keyCenters[charOn] = {x:(x-25+xChange)+15,y:y+10+10}
         charOn++;
     }
     y+=45;
     for(let xChange = -103; xChange<=110; xChange+=35) {
-        drawLetterBox("#ffffff", "#909094", x - 25 + xChange, y + 10, 30, 40,keyboardDisplayChars[charOn]);
+        let keyColor = "#909094";
+        if(keyboardColors[keyboardDisplayChars[charOn]]!=null)
+            keyColor = keyboardColors[keyboardDisplayChars[charOn]];
+        drawLetterBox("#ffffff", keyColor, x - 25 + xChange, y + 10, 30, 40,keyboardDisplayChars[charOn]);
         keyCenters[charOn] = {x:(x-25+xChange)+15,y:y+10+10}
         charOn++;
     }
@@ -91,10 +127,24 @@ function mouseDownHandler(e) {
         relativeY = e.clientY - rect.top;
     }
     let keyHit = findClosestKey(relativeX,relativeY);
-    if(keyHit!=10&&keyHit!=20)
-        localPlayer.words[0] += keyboardDisplayChars[keyHit];
-    else if(keyHit==10)
-        localPlayer.words[0] = localPlayer.words[0].substring(0,localPlayer.words[0].length-1);
+    if(keyHit!==10&&keyHit!==20)
+        localPlayer.words[rowChecked+1] += keyboardDisplayChars[keyHit];
+    else if(keyHit===10) {
+        localPlayer.words[rowChecked + 1] = localPlayer.words[rowChecked + 1].substring(0, localPlayer.words[rowChecked + 1].length - 1);
+        rejected = false;
+    }
+    else {
+        if(localPlayer.words[rowChecked+1].length==5){
+            if(dictionary.indexOf(localPlayer.words[rowChecked+1])>-1)
+                rowChecked++;
+            else
+                rejected = true;
+        }
+
+    }
+    for(let i = 0; i<localPlayer.words.length; i++)
+        if(localPlayer.words[i].length>5)
+            localPlayer.words[i] = localPlayer.words[i].substring(0,5);
 
 }
 
