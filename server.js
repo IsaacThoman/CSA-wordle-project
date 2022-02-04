@@ -10,6 +10,13 @@ app.get('/', (req, res) => {
 });
 app.use(express.static('public'));
 
+io.on('connection', (socket) => {
+
+    socket.on('playerData', (msg) => {
+        io.emit('playerData',msg);
+    });
+
+});
 
 server.listen(3000, () => {
     console.log('listening on *:3000');
