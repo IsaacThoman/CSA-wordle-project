@@ -12,6 +12,12 @@ app.use(express.static('public'));
 
 io.on('connection', (socket) => {
 
+    socket.on('disconnect', () => {
+        let emptyPlayer = {words:['','','','','',''],keyboardColors:{},playerID:0,rowChecked: -1,won:false};
+        io.emit('playerData',emptyPlayer)
+    });
+
+
     socket.on('playerData', (msg) => {
         io.emit('playerData',msg);
     });

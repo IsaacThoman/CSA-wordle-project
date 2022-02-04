@@ -3,8 +3,8 @@ const ctx = canvas.getContext("2d");
 const socket = io();
 let titleImage = new Image(); titleImage.src = 'title.png';
 
-let localPlayer = {words:['','','','','',''],keyboardColors:{},playerID:Math.random(),rowChecked: -1};
-let remotePlayer = {words:['','','','','',''],keyboardColors:{},playerID:0,rowChecked: -1};
+let localPlayer = {words:['','','','','',''],keyboardColors:{},playerID:Math.random(),rowChecked: -1,won:false};
+let remotePlayer = {words:['','','','','',''],keyboardColors:{},playerID:0,rowChecked: -1,won:false};
 let keyCenters = [];
 let keyboardDisplayChars = 'qwertyuiop←asdfghjkl⏎zxcvbnm'.split('');
 let secretWord = 'shard';
@@ -56,13 +56,25 @@ function doFrame(){
     drawKeyboard("#000000",centerX,centerY/1.5-25+225+40,100,window.innerHeight-20-(centerY/1.5-25+225+40)-0);
     utcTime = (new Date()).getTime() / 1000;
 
+    let infoText = '';
 
-    if(remotePlayer.playerID==0){
-        ctx.fillStyle = "#32c3c7";
-        ctx.font = '15px Comic Sans MS';
-        ctx.fillText('Waiting for remote player',0,15)
-    }
+    if(remotePlayer.playerID==0)
+        infoText = 'Waiting for remote player';
 
+    if(remotePlayer.won)
+        infoText = 'Remote player won!'
+
+    if(localPlayer.won)
+        infoText = 'You won!'
+
+    for(let i = 0; i<localPlayer.words.length; i++)
+        if(localPlayer.words[i] == secretWord && localPlayer.rowChecked+1>i)
+            localPlayer.won = true;
+
+
+    ctx.fillStyle = "#32c3c7";
+    ctx.font = '25px Comic Sans MS';
+    ctx.fillText(infoText,centerX-ctx.measureText(infoText).width/2,centerY/1.8)
 
     requestAnimationFrame(doFrame)
 }
@@ -94,7 +106,7 @@ function drawLetterBoxes(x,y,player){
             else if(secretWord.indexOf(player.words[Math.floor(yChange/45)].charAt(Math.floor(xChange/45+2)))>-1 &&  player.rowChecked >= Math.floor(yChange/45))
                 bgColor = keyColors[1];
             if(rejected && Math.floor(yChange/45) == player.rowChecked+1)
-                bgColor = keyColors[4];
+                bgColor = keyColors[3];
             drawLetterBox("#ffffff",bgColor,x-25+xChange,y/1.5-25+yChange,40,40,player.words[Math.floor(yChange/45)].charAt(Math.floor(xChange/45+2)));
             if(bgColor == "#707070")
                 bgColor = keyColors[0];
