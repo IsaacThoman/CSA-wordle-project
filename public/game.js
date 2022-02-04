@@ -4,7 +4,7 @@ const socket = io();
 let titleImage = new Image(); titleImage.src = 'title.png';
 
 let localPlayer = {words:['','','','','',''],keyboardColors:{},playerID:Math.random(),rowChecked: -1};
-let remotePlayer = {words:['','','','','',''],keyboardColors:{},playerID:Math.random(),rowChecked: -1};
+let remotePlayer = {words:['','','','','',''],keyboardColors:{},playerID:0,rowChecked: -1};
 let keyCenters = [];
 let keyboardDisplayChars = 'qwertyuiop←asdfghjkl⏎zxcvbnm'.split('');
 let secretWord = 'shard';
@@ -55,6 +55,15 @@ function doFrame(){
 
     drawKeyboard("#000000",centerX,centerY/1.5-25+225+40,100,window.innerHeight-20-(centerY/1.5-25+225+40)-0);
     utcTime = (new Date()).getTime() / 1000;
+
+
+    if(remotePlayer.playerID==0){
+        ctx.fillStyle = "#32c3c7";
+        ctx.font = '15px Comic Sans MS';
+        ctx.fillText('Waiting for remote player',0,15)
+    }
+
+
     requestAnimationFrame(doFrame)
 }
 requestAnimationFrame(doFrame)
@@ -99,8 +108,14 @@ function drawKeyboard(color,x,y,w,h){
     let charOn = 0;
     for(let xChange = -165; xChange<=165; xChange+=33){
         let keyColor = "#909094";
+
+        if(remotePlayer.keyboardColors[keyboardDisplayChars[charOn]]!=null)
+            keyColor = remotePlayer.keyboardColors[keyboardDisplayChars[charOn]];
+
         if(localPlayer.keyboardColors[keyboardDisplayChars[charOn]]!=null)
             keyColor = localPlayer.keyboardColors[keyboardDisplayChars[charOn]];
+
+
         drawLetterBox("#ffffff",keyColor,x-25+xChange,y+10,30,40,keyboardDisplayChars[charOn]);
         keyCenters[charOn] = {x:(x-25+xChange)+15,y:y+10+20}
         charOn++;
@@ -110,6 +125,8 @@ function drawKeyboard(color,x,y,w,h){
         let keyColor = "#909094";
         if(localPlayer.keyboardColors[keyboardDisplayChars[charOn]]!=null)
             keyColor = localPlayer.keyboardColors[keyboardDisplayChars[charOn]];
+        if(remotePlayer.keyboardColors[keyboardDisplayChars[charOn]]!=null)
+            keyColor = remotePlayer.keyboardColors[keyboardDisplayChars[charOn]];
         drawLetterBox("#ffffff", keyColor, x - 25 + xChange, y + 10, 30, 40,keyboardDisplayChars[charOn]);
         keyCenters[charOn] = {x:(x-25+xChange)+15,y:y+10+10}
         charOn++;
@@ -118,7 +135,11 @@ function drawKeyboard(color,x,y,w,h){
     for(let xChange = -103; xChange<=110; xChange+=35) {
         let keyColor = "#909094";
         if(localPlayer.keyboardColors[keyboardDisplayChars[charOn]]!=null)
-            keyColor = localPlayer.keyboardColors[keyboardDisplayChars[charOn]];
+                keyColor = localPlayer.keyboardColors[keyboardDisplayChars[charOn]];
+        if(remotePlayer.keyboardColors[keyboardDisplayChars[charOn]]!=null)
+                keyColor = remotePlayer.keyboardColors[keyboardDisplayChars[charOn]];
+
+
         drawLetterBox("#ffffff", keyColor, x - 25 + xChange, y + 10, 30, 40,keyboardDisplayChars[charOn]);
         keyCenters[charOn] = {x:(x-25+xChange)+15,y:y+10+10}
         charOn++;
